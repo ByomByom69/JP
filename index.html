@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일본 장기 체류 및 재입국 전략 리포트</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neutral-bg': '#F5F5F0',     /* Warm Off-white */
+                        'card-bg': '#FFFFFF',
+                        'primary': '#2C3E50',        /* Dark Slate Blue (Professional/Official) */
+                        'accent-safe': '#4A7C59',    /* Muted Sage (Safe/Go) */
+                        'accent-risk': '#C0392B',    /* Muted Red (Danger) */
+                        'highlight': '#D4AC0D',      /* Muted Gold (Attention) */
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F5F5F0;
+            color: #333;
+        }
+        
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            /* Base height */
+            height: 300px;
+            max-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #2C3E50;
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #E5E7EB;
+            border-radius: 2px;
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Flow Diagram Elements */
+        .flow-step {
+            position: relative;
+        }
+        .flow-line::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            width: 20px;
+            height: 2px;
+            background-color: #CBD5E1;
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .flow-line::after {
+                display: block;
+            }
+            .flow-line:last-child::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- REQUIRED PLACEHOLDERS -->
+    <!-- Chosen Palette: Warm Neutrals & Professional Slate (Calm Harmony) -->
+    <!-- Application Structure Plan: 
+         1. Hero Section: Overview of the mission (Safe Long-term Stay).
+         2. Strategic Calculator (Dashboard): Interactive sliders to simulate the "Split Stay" plan (60+30+60) vs. the hard limits (90/180). Updates a Chart.js Donut.
+         3. Timeline Visualization: A structured HTML flow showing the chronological steps (Entry -> Break -> Entry).
+         4. Asset Inventory: Cards detailing the assets (Civil Servant, GF, Money) used for credibility.
+         5. Simulation (Training): Interactive Q&A for Immigration checks (Don't say "Living", say "Tourism").
+         6. Checklist: Interactive items for document preparation.
+         Rationale: Users need to calculate their days to feel safe (Calculator), understand the sequence (Timeline), and practice their cover story (Simulation).
+    -->
+    <!-- Visualization & Content Choices:
+         1. Stay Limit Calculator: Chart.js Donut. Goal: Inform/Compare. Visualizes "Days Used" vs "Remaining Safe Limit" dynamically.
+         2. Timeline Flow: HTML/Flexbox. Goal: Organize. Shows the sequential nature of the plan.
+         3. Credibility Assets: Grid/Cards with Icons (Unicode). Goal: Inform. Highlights key strengths.
+         4. Risk Simulation: JS Toggle/Accordion. Goal: Inform/Train. Hides "Correct Answers" behind interaction to test user knowledge.
+         5. Document Checklist: HTML Inputs. Goal: Organize.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- HEADER -->
+    <header class="bg-primary text-white py-8 shadow-md">
+        <div class="max-w-6xl mx-auto px-4">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">🇯🇵 일본 장기 체류 및 재입국 전략</h1>
+            <p class="text-gray-300 text-lg">공무원 신분 및 지인 방문을 활용한 180일 관리 플랜</p>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-8 space-y-12 w-full">
+
+        <!-- INTRO -->
+        <section>
+            <div class="bg-card-bg rounded-xl shadow-soft p-6 border-l-4 border-highlight">
+                <h2 class="text-xl font-bold text-primary mb-2">📄 전략 개요</h2>
+                <p class="text-gray-600 leading-relaxed">
+                    본 리포트는 <strong>무비자 입국(90일)</strong> 제도를 활용하여 1년 중 최대 180일 이내로 일본에 체류하기 위한 
+                    <span class="text-primary font-semibold">분할 체류 전략</span>을 시각화하였습니다. 
+                    단순 관광 목적을 유지하며, <strong>공무원 신분</strong>이라는 확실한 귀국 보증 수단을 통해 입국 리스크를 최소화하는 것이 핵심입니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- DASHBOARD SECTION: Stay Calculator -->
+        <section>
+            <div class="mb-4">
+                <h2 class="text-2xl font-bold text-primary flex items-center gap-2">
+                    <span>⏱️</span> 체류 기간 시뮬레이터
+                </h2>
+                <p class="text-gray-500 mt-1">
+                    체류 일정을 조정하여 <strong>180일 한도</strong>와 <strong>90일 1회 한도</strong> 내에서 안전한지 확인해보세요.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Controls -->
+                <div class="lg:col-span-2 bg-card-bg rounded-xl shadow-soft p-6">
+                    <div class="space-y-8">
+                        <!-- Slider 1 -->
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold text-gray-700">1차 방문 기간 (일)</label>
+                                <span id="val-visit1" class="font-bold text-primary">75일</span>
+                            </div>
+                            <input type="range" id="visit1" min="1" max="100" value="75" class="w-full">
+                            <p class="text-xs text-gray-400 mt-1">권장: 60~75일 (90일 초과 시 위험)</p>
+                        </div>
+
+                        <!-- Slider 2 -->
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold text-gray-700">한국 체류 (재정비) 기간 (일)</label>
+                                <span id="val-break" class="font-bold text-gray-600">30일</span>
+                            </div>
+                            <input type="range" id="breakTime" min="1" max="60" value="30" class="w-full">
+                            <p class="text-xs text-gray-400 mt-1">권장: 최소 30일 이상 (거주 의심 회피)</p>
+                        </div>
+
+                        <!-- Slider 3 -->
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold text-gray-700">2차 방문 기간 (일)</label>
+                                <span id="val-visit2" class="font-bold text-primary">75일</span>
+                            </div>
+                            <input type="range" id="visit2" min="1" max="100" value="75" class="w-full">
+                            <p class="text-xs text-gray-400 mt-1">최종 누적일 관리 필요</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Box -->
+                    <div id="analysis-box" class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-2">📊 리스크 분석</h4>
+                        <p id="analysis-text" class="text-sm text-gray-600">분석 중...</p>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="bg-card-bg rounded-xl shadow-soft p-6 flex flex-col items-center justify-center">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-4 w-full text-left">누적 체류일 현황</h3>
+                    <div class="chart-container">
+                        <canvas id="stayChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <span class="block text-3xl font-bold text-primary" id="total-days-display">150일</span>
+                        <span class="text-sm text-gray-400">/ 1년 최대 180일 권고</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIMELINE FLOW -->
+        <section>
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary flex items-center gap-2">
+                    <span>✈️</span> 단계별 실행 플랜
+                </h2>
+                <p class="text-gray-500">성공적인 장기 체류를 위한 순차적 프로세스입니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Step 1 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-blue-600 shadow-sm relative flow-line">
+                    <div class="text-blue-600 text-2xl font-bold mb-2">Step 1</div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">1차 입국 및 체류</h3>
+                    <p class="text-sm text-gray-600 mb-2">약 60~75일 체류</p>
+                    <ul class="text-sm text-gray-500 list-disc list-inside space-y-1">
+                        <li>순수 관광 및 휴식 강조</li>
+                        <li>교토 주변 여행</li>
+                        <li>만료일 2주 전 출국 준비</li>
+                    </ul>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-gray-400 shadow-sm relative flow-line">
+                    <div class="text-gray-500 text-2xl font-bold mb-2">Step 2</div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">한국 복귀 (재정비)</h3>
+                    <p class="text-sm text-gray-600 mb-2">최소 30일 이상 체류</p>
+                    <ul class="text-sm text-gray-500 list-disc list-inside space-y-1">
+                        <li>'거주'가 아님을 증명하는 기간</li>
+                        <li>직장 복귀 준비 척하기</li>
+                        <li>재입국 서류(잔고 등) 갱신</li>
+                    </ul>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-blue-600 shadow-sm">
+                    <div class="text-blue-600 text-2xl font-bold mb-2">Step 3</div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">2차 입국 (재입국)</h3>
+                    <p class="text-sm text-gray-600 mb-2">잔여 기간 (60~75일)</p>
+                    <ul class="text-sm text-gray-500 list-disc list-inside space-y-1">
+                        <li>입국 심사 강화 대비</li>
+                        <li>왕복 티켓 필수 지참</li>
+                        <li>최종 누적 180일 미만 준수</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ASSETS GRID -->
+        <section>
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-primary flex items-center gap-2">
+                    <span>🛡️</span> 입국 심사 방어 자산
+                </h2>
+                <p class="text-gray-500">입국 거부를 막고 신뢰를 확보하기 위한 3가지 핵심 요소입니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Asset 1 -->
+                <div class="bg-white rounded-xl p-6 shadow-soft hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-4">🏛️</div>
+                    <h3 class="text-lg font-bold text-gray-800">공무원 신분</h3>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p class="mb-2"><strong>역할:</strong> 불법 취업 및 불법 체류 가능성 0% 증명.</p>
+                        <p class="bg-blue-50 text-blue-800 p-2 rounded">"한국에 돌아갈 확실한 직장이 있는 안정적인 관광객"</p>
+                    </div>
+                </div>
+
+                <!-- Asset 2 -->
+                <div class="bg-white rounded-xl p-6 shadow-soft hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-4">🎓</div>
+                    <h3 class="text-lg font-bold text-gray-800">지인 (교토대생)</h3>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p class="mb-2"><strong>역할:</strong> 장기 체류의 명분 (방문 및 동반 여행).</p>
+                        <p class="bg-green-50 text-green-800 p-2 rounded">"교토대학교 재학 중인 여자친구 격려차 방문"</p>
+                    </div>
+                </div>
+
+                <!-- Asset 3 -->
+                <div class="bg-white rounded-xl p-6 shadow-soft hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-4">💰</div>
+                    <h3 class="text-lg font-bold text-gray-800">재정 증명</h3>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p class="mb-2"><strong>역할:</strong> 일본 내 경제 활동 불필요 증명.</p>
+                        <p class="bg-yellow-50 text-yellow-800 p-2 rounded">"영문 잔고 증명서 및 왕복 항공권 소지"</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- INTERACTIVE TRAINING -->
+        <section class="bg-white rounded-xl shadow-soft p-8 border border-gray-100">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl font-bold text-primary">👮 입국 심사 시뮬레이션</h2>
+                <p class="text-gray-500 mt-2">심사관의 질문에 올바르게 대답할 수 있나요? 카드를 클릭하여 모범 답안을 확인하세요.</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Q1 -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center font-bold text-gray-700 transition-colors" onclick="toggleAnswer('ans1')">
+                        <span>Q1. 왜 이렇게 오래 머무나요? (Why so long?)</span>
+                        <span class="text-gray-400">▼</span>
+                    </button>
+                    <div id="ans1" class="hidden p-4 bg-white border-t border-gray-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-red-50 text-red-700 rounded border border-red-100">
+                                <span class="font-bold">❌ 절대 금지 (Forbidden)</span><br>
+                                "일본에서 <strong>살아보고</strong> 싶어서요."<br>
+                                "여자친구랑 <strong>동거</strong>하려고요."<br>
+                                (Live, Stay long term, Work)
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-700 rounded border border-green-100">
+                                <span class="font-bold">✅ 모범 답안 (Recommended)</span><br>
+                                "한국에서 긴 휴가를 받았습니다."<br>
+                                "교토 등 여러 도시를 천천히 <strong>여행(Travel)</strong>하고 친구도 만날 예정입니다."
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center font-bold text-gray-700 transition-colors" onclick="toggleAnswer('ans2')">
+                        <span>Q2. 일본에서 일할 계획이 있나요? (Work?)</span>
+                        <span class="text-gray-400">▼</span>
+                    </button>
+                    <div id="ans2" class="hidden p-4 bg-white border-t border-gray-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-red-50 text-red-700 rounded border border-red-100">
+                                <span class="font-bold">❌ 절대 금지 (Forbidden)</span><br>
+                                "돈 떨어지면 아르바이트라도 할까 생각 중입니다."<br>
+                                "온라인으로 한국 업무를 계속 합니다."
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-700 rounded border border-green-100">
+                                <span class="font-bold">✅ 모범 답안 (Recommended)</span><br>
+                                "전혀 없습니다 (No)."<br>
+                                "저는 한국 공무원이며, 충분한 저축이 있습니다." (잔고 증명서 제시)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center font-bold text-gray-700 transition-colors" onclick="toggleAnswer('ans3')">
+                        <span>Q3. 숙소는 어디인가요? (Accommodation?)</span>
+                        <span class="text-gray-400">▼</span>
+                    </button>
+                    <div id="ans3" class="hidden p-4 bg-white border-t border-gray-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-red-50 text-red-700 rounded border border-red-100">
+                                <span class="font-bold">❌ 위험 답변 (Risk)</span><br>
+                                "아직 안 정했습니다." (90일인데 미정이면 의심)<br>
+                                "그냥 친구 집에서 계속 지낼 겁니다." (의존적 체류 의심)
+                            </div>
+                            <div class="p-3 bg-green-50 text-green-700 rounded border border-green-100">
+                                <span class="font-bold">✅ 모범 답안 (Recommended)</span><br>
+                                "초반에는 호텔에 묵고, 이후에는 친구와 함께 여행하며 숙소를 옮길 예정입니다."<br>
+                                (여자친구 주소와 연락처, 학생증 사본 준비)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHECKLIST -->
+        <section>
+            <div class="bg-primary rounded-xl p-8 text-white">
+                <h2 class="text-2xl font-bold mb-4">✅ 필수 준비 서류 체크리스트</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="flex items-center space-x-3 cursor-pointer p-3 bg-white/10 rounded hover:bg-white/20 transition">
+                        <input type="checkbox" class="w-5 h-5 accent-highlight rounded">
+                        <span><strong>영문 재직증명서</strong> (공무원 신분 증빙)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-3 bg-white/10 rounded hover:bg-white/20 transition">
+                        <input type="checkbox" class="w-5 h-5 accent-highlight rounded">
+                        <span><strong>왕복 항공권</strong> (90일 이내 귀국 확정 티켓)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-3 bg-white/10 rounded hover:bg-white/20 transition">
+                        <input type="checkbox" class="w-5 h-5 accent-highlight rounded">
+                        <span><strong>영문 잔고 증명서</strong> (최소 500만원 이상 권장)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-3 bg-white/10 rounded hover:bg-white/20 transition">
+                        <input type="checkbox" class="w-5 h-5 accent-highlight rounded">
+                        <span><strong>지인 신원 자료</strong> (여친 학생증/재학증명서)</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- FUTURE ALTERNATIVES -->
+        <section>
+            <h2 class="text-2xl font-bold text-primary mb-4">🚀 향후 장기 체류 대안</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-800">워킹홀리데이</h4>
+                    <p class="text-gray-500 mt-1">만 30세 이전 신청 필수. 1년간 자유롭게 거주 및 취업 가능.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-800">유학 휴직</h4>
+                    <p class="text-gray-500 mt-1">공무원 신분 유지하며 어학원 등록. 유학 비자로 안정적 체류.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-800">배우자 비자</h4>
+                    <p class="text-gray-500 mt-1">혼인 신고 후 신청. 취업 및 체류 제한이 없는 가장 강력한 비자.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-100 border-t border-gray-200 py-6 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>※ 본 리포트는 참고용이며, 실제 입국 심사 결과는 심사관의 재량에 따라 달라질 수 있습니다.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA & STATE ---
+        const limits = {
+            maxSingleStay: 90,
+            maxYearlyStay: 180,
+            recommendedTotal: 150
+        };
+
+        const inputs = {
+            visit1: document.getElementById('visit1'),
+            visit2: document.getElementById('visit2'),
+            breakTime: document.getElementById('breakTime')
+        };
+
+        const displays = {
+            visit1: document.getElementById('val-visit1'),
+            visit2: document.getElementById('val-visit2'),
+            breakTime: document.getElementById('val-break'),
+            total: document.getElementById('total-days-display'),
+            analysis: document.getElementById('analysis-text'),
+            analysisBox: document.getElementById('analysis-box')
+        };
+
+        let chartInstance = null;
+
+        // --- CHART INITIALIZATION (Chart.js) ---
+        function initChart() {
+            const ctx = document.getElementById('stayChart').getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['현재 계획 (Planned)', '안전 여유 (Safe Margin)', '초과 위험 (Risk)'],
+                    datasets: [{
+                        data: [150, 30, 0], // Initial data
+                        backgroundColor: [
+                            '#2C3E50', // Planned (Primary)
+                            '#4A7C59', // Margin (Safe Green)
+                            '#C0392B'  // Risk (Red)
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: '"Noto Sans KR", sans-serif', size: 12 },
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}일`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- LOGIC: UPDATE CALCULATIONS ---
+        function updateSimulation() {
+            const v1 = parseInt(inputs.visit1.value);
+            const v2 = parseInt(inputs.visit2.value);
+            const brk = parseInt(inputs.breakTime.value);
+
+            // Update Text Displays
+            displays.visit1.textContent = `${v1}일`;
+            displays.visit2.textContent = `${v2}일`;
+            displays.breakTime.textContent = `${brk}일`;
+
+            const totalStay = v1 + v2;
+            displays.total.textContent = `${totalStay}일`;
+
+            // Logic Analysis
+            let riskLevel = "safe"; // safe, caution, danger
+            let messages = [];
+
+            // 1. Single Stay Limit Check
+            if (v1 > 90 || v2 > 90) {
+                riskLevel = "danger";
+                messages.push("🚨 경고: 1회 방문이 90일을 초과했습니다. 무비자 규정 위반으로 입국이 거부됩니다.");
+            } else if (v1 > 85 || v2 > 85) {
+                riskLevel = "caution";
+                messages.push("⚠️ 주의: 90일 한도를 꽉 채우는 것은 '오버스테이' 위험으로 간주될 수 있습니다.");
+            }
+
+            // 2. Yearly Total Limit Check
+            if (totalStay > 180) {
+                riskLevel = "danger";
+                messages.push(`🚨 경고: 연간 누적 ${totalStay}일입니다. 180일 규정을 초과하여 재입국 거부 확률이 매우 높습니다.`);
+            } else if (totalStay > 160) {
+                riskLevel = "caution";
+                messages.push("⚠️ 주의: 연간 누적 체류일이 많습니다. 재입국 시 정밀 심사 가능성이 높습니다.");
+            }
+
+            // 3. Break Time Check
+            if (brk < 20) {
+                riskLevel = riskLevel === "danger" ? "danger" : "caution";
+                messages.push("⚠️ 주의: 한국 체류 기간이 너무 짧습니다. 단순 비자 런(Visa Run)으로 의심받을 수 있습니다.");
+            }
+
+            // Default Safe Message
+            if (messages.length === 0) {
+                messages.push("✅ 안전: 규정 내에서 적절하게 분배된 계획입니다. 공무원 신분 증빙 시 문제없을 것으로 예상됩니다.");
+            }
+
+            // Update UI based on Risk
+            displays.analysis.innerHTML = messages.join("<br>");
+            
+            if (riskLevel === "danger") {
+                displays.analysisBox.className = "mt-8 p-4 bg-red-50 rounded-lg border border-red-200 text-red-800";
+                displays.total.className = "block text-3xl font-bold text-accent-risk";
+            } else if (riskLevel === "caution") {
+                displays.analysisBox.className = "mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-yellow-800";
+                displays.total.className = "block text-3xl font-bold text-highlight";
+            } else {
+                displays.analysisBox.className = "mt-8 p-4 bg-green-50 rounded-lg border border-green-200 text-green-800";
+                displays.total.className = "block text-3xl font-bold text-accent-safe";
+            }
+
+            // Update Chart Data
+            // Format: [Used, Remaining Safe, Over Limit]
+            let chartData = [];
+            if (totalStay <= 180) {
+                chartData = [totalStay, 180 - totalStay, 0];
+            } else {
+                chartData = [180, 0, totalStay - 180];
+            }
+            
+            chartInstance.data.datasets[0].data = chartData;
+            
+            // Dynamic Color Update for "Used" segment
+            if (riskLevel === "danger") {
+                 chartInstance.data.datasets[0].backgroundColor[0] = '#C0392B'; // Red
+            } else if (riskLevel === "caution") {
+                 chartInstance.data.datasets[0].backgroundColor[0] = '#D4AC0D'; // Gold
+            } else {
+                 chartInstance.data.datasets[0].backgroundColor[0] = '#2C3E50'; // Blue
+            }
+
+            chartInstance.update();
+        }
+
+        // --- INTERACTION: ACCORDION TOGGLE ---
+        function toggleAnswer(id) {
+            const element = document.getElementById(id);
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+
+        // --- EVENTS ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            updateSimulation(); // Run once on load
+
+            // Attach listeners to sliders
+            Object.values(inputs).forEach(input => {
+                input.addEventListener('input', updateSimulation);
+            });
+        });
+
+    </script>
+</body>
+</html>
